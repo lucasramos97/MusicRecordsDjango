@@ -1,6 +1,6 @@
 import factory
 from faker import Factory
-from ..models import Music
+from app.models import Music
 
 fake = Factory.create()
 
@@ -11,6 +11,6 @@ class MusicFactory(factory.django.DjangoModelFactory):
     title = fake.sentence(nb_words=3)
     artist = fake.name()
     release_date = fake.date()
-    duration = fake.time_delta()
+    duration = fake.time()
     number_views = fake.random_int()
     feat = fake.pybool()

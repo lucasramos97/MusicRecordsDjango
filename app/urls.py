@@ -3,9 +3,9 @@ from . import views
 
 urlpatterns = [
     url(
-        r'^musics/(?P<pk>[0-9]+)$',
-        views.get_delete_update_music,
-        name='get_delete_update_music'
+        r'^musics/(?P<id>[0-9]+)$',
+        views.get_update_delete_music,
+        name='get_update_delete_music'
     ),
     url(
         r'^musics/$',
