@@ -48,7 +48,7 @@ def __get_musics(request):
     page = request.GET.get('page') or 1
     size = request.GET.get('size') or 5
 
-    musics = Music.objects.all()
+    musics = Music.objects.filter(deleted=False)
     paginator = Paginator(musics, size)
     serializer = MusicSerializer(paginator.get_page(page), many=True)
 

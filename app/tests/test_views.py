@@ -13,6 +13,7 @@ class GetAllMusicsTest(TestCase):
 
     def setUp(self):
         MusicFactory.create_batch(10)
+        MusicFactory.create(deleted=True)
 
     def test_get_all_musics_with_default_query_params(self):
         response = client.get(reverse('get_post_musics'))
