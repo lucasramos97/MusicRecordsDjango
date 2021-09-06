@@ -8,7 +8,7 @@ urlpatterns = [
         name='get_update_delete_music'
     ),
     url(
-        r'^musics/$',
+        r'^musics/?$',
         views.get_post_musics,
         name='get_post_musics'
     )
