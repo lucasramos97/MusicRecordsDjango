@@ -9,6 +9,7 @@ from .factories import MusicFactory
 
 client = Client()
 
+
 class GetAllMusicsTest(TestCase):
 
     def setUp(self):
@@ -22,10 +23,12 @@ class GetAllMusicsTest(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_get_all_musics_with_explicit_query_params(self):
-        response = client.get(reverse('get_post_musics'), {'page': 2, 'size': 4})
+        response = client.get(reverse('get_post_musics'),
+                              {'page': 2, 'size': 4})
         self.assertEqual(len(response.data['content']), 4)
         self.assertEqual(response.data['total'], 10)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
 
 class GetMusicByIdTest(TestCase):
 
@@ -34,22 +37,26 @@ class GetMusicByIdTest(TestCase):
         self.deleted_musics = MusicFactory.create_batch(10, deleted=True)
 
     def test_get_music_by_id(self):
-        response = client.get(reverse('get_update_delete_music', kwargs={'id': 1}))
+        response = client.get(
+            reverse('get_update_delete_music', kwargs={'id': 1}))
         music = [music for music in self.musics if music.id == 1][0]
         serializer = MusicSerializer(music)
         self.assertEqual(response.data, serializer.data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-    
+
     def test_get_nonexistent_music_by_id(self):
-        response = client.get(reverse('get_update_delete_music', kwargs={'id': 100}))
+        response = client.get(
+            reverse('get_update_delete_music', kwargs={'id': 100}))
         self.assertEqual(response.data['message'], 'Music not found!')
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-    
+
     def test_get_deleted_music_by_id(self):
         deleted_music = self.deleted_musics[0]
-        response = client.get(reverse('get_update_delete_music', kwargs={'id': deleted_music.id}))
+        response = client.get(
+            reverse('get_update_delete_music', kwargs={'id': deleted_music.id}))
         self.assertEqual(response.data['message'], 'Music not found!')
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
 
 class PostMusicTest(TestCase):
 
@@ -79,7 +86,7 @@ class PostMusicTest(TestCase):
         serializer = MusicSerializer(music)
         self.assertEqual(response.data, serializer.data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-    
+
     def test_post_minimal_attributes_music(self):
         response = client.post(
             reverse('get_post_musics'),
@@ -93,7 +100,7 @@ class PostMusicTest(TestCase):
         self.assertFalse(response.data['deleted'])
         self.assertEqual(response.data, serializer.data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-    
+
     def test_post_music_without_title_field(self):
         self.minimal_attributes_music['title'] = ''
         response = client.post(
@@ -103,7 +110,7 @@ class PostMusicTest(TestCase):
         )
         self.assertEqual(response.data['message'], 'Title is required!')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-    
+
     def test_post_music_without_artist_field(self):
         self.minimal_attributes_music['artist'] = ''
         response = client.post(
@@ -113,7 +120,7 @@ class PostMusicTest(TestCase):
         )
         self.assertEqual(response.data['message'], 'Artist is required!')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-    
+
     def test_post_music_without_release_date_field(self):
         self.minimal_attributes_music['release_date'] = ''
         response = client.post(
@@ -123,7 +130,7 @@ class PostMusicTest(TestCase):
         )
         self.assertEqual(response.data['message'], 'Release Date is required!')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-    
+
     def test_post_music_without_duration_field(self):
         self.minimal_attributes_music['duration'] = ''
         response = client.post(
@@ -133,6 +140,7 @@ class PostMusicTest(TestCase):
         )
         self.assertEqual(response.data['message'], 'Duration is required!')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
 
 class PutMusicTest(TestCase):
 
@@ -164,7 +172,7 @@ class PutMusicTest(TestCase):
         serializer = MusicSerializer(put_music)
         self.assertEqual(response.data, serializer.data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-    
+
     def test_put_minimal_attributes_music(self):
         response = client.put(
             reverse('get_update_delete_music', kwargs={'id': self.music.id}),
@@ -175,7 +183,7 @@ class PutMusicTest(TestCase):
         serializer = MusicSerializer(put_music)
         self.assertEqual(response.data, serializer.data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-    
+
     def test_put_music_without_title_field(self):
         self.edited_minimal_attributes_music['title'] = ''
         response = client.put(
@@ -185,7 +193,7 @@ class PutMusicTest(TestCase):
         )
         self.assertEqual(response.data['message'], 'Title is required!')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-    
+
     def test_put_music_without_artist_field(self):
         self.edited_minimal_attributes_music['artist'] = ''
         response = client.put(
@@ -195,7 +203,7 @@ class PutMusicTest(TestCase):
         )
         self.assertEqual(response.data['message'], 'Artist is required!')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-    
+
     def test_put_music_without_release_date_field(self):
         self.edited_minimal_attributes_music['release_date'] = ''
         response = client.put(
@@ -215,7 +223,7 @@ class PutMusicTest(TestCase):
         )
         self.assertEqual(response.data['message'], 'Duration is required!')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-    
+
     def test_put_nonexistent_music(self):
         response = client.put(
             reverse('get_update_delete_music', kwargs={'id': 100}),
@@ -224,15 +232,17 @@ class PutMusicTest(TestCase):
         )
         self.assertEqual(response.data['message'], 'Music not found!')
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-    
+
     def test_put_deleted_music(self):
         response = client.put(
-            reverse('get_update_delete_music', kwargs={'id': self.deleted_music.id}),
+            reverse('get_update_delete_music', kwargs={
+                    'id': self.deleted_music.id}),
             data=json.dumps(self.edited_minimal_attributes_music),
             content_type='application/json'
         )
         self.assertEqual(response.data['message'], 'Music not found!')
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
 
 class DeleteMusicTest(TestCase):
 
@@ -241,22 +251,115 @@ class DeleteMusicTest(TestCase):
         self.deleted_music = MusicFactory.create(deleted=True)
 
     def test_delete_music(self):
-        response = client.delete(reverse('get_update_delete_music', kwargs={'id': self.music.id}))
+        response = client.delete(
+            reverse('get_update_delete_music', kwargs={'id': self.music.id}))
         self.assertEqual(response.data['title'], self.music.title)
         self.assertEqual(response.data['artist'], self.music.artist)
-        self.assertEqual(response.data['release_date'], str(self.music.release_date))
+        self.assertEqual(response.data['release_date'], str(
+            self.music.release_date))
         self.assertEqual(response.data['duration'], str(self.music.duration))
-        self.assertEqual(response.data['number_views'], self.music.number_views)
+        self.assertEqual(
+            response.data['number_views'], self.music.number_views)
         self.assertEqual(response.data['feat'], self.music.feat)
         self.assertTrue(response.data['deleted'])
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-    
+
     def test_delete_nonexistent_music(self):
-        response = client.delete(reverse('get_update_delete_music', kwargs={'id': 100}))
+        response = client.delete(
+            reverse('get_update_delete_music', kwargs={'id': 100}))
         self.assertEqual(response.data['message'], 'Music not found!')
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-    
+
     def test_delete_deleted_music(self):
-        response = client.delete(reverse('get_update_delete_music', kwargs={'id': self.deleted_music.id}))
+        response = client.delete(
+            reverse('get_update_delete_music', kwargs={'id': self.deleted_music.id}))
+        self.assertEqual(response.data['message'], 'Music not found!')
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+
+class CountDeletedMusicsTest(TestCase):
+
+    def setUp(self):
+        MusicFactory.create_batch(10, deleted=True)
+        MusicFactory.create()
+
+    def test_count_deleted_music(self):
+        response = client.get(reverse('count_deleted_musics'))
+        self.assertEqual(response.data, 10)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+
+class GetAllDeletedMusicsTest(TestCase):
+
+    def setUp(self):
+        MusicFactory.create_batch(10, deleted=True)
+        MusicFactory.create()
+
+    def test_get_all_deleted_musics_with_default_query_params(self):
+        response = client.get(reverse('get_deleted_musics'))
+        self.assertEqual(len(response.data['content']), 5)
+        self.assertEqual(response.data['total'], 10)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_get_all_deleted_musics_with_explicit_query_params(self):
+        response = client.get(reverse('get_deleted_musics'), {
+                              'page': 2, 'size': 4})
+        self.assertEqual(len(response.data['content']), 4)
+        self.assertEqual(response.data['total'], 10)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+
+class RestoreDeletedMusicsTest(TestCase):
+
+    def setUp(self):
+        self.deleted_musics = MusicFactory.create_batch(10, deleted=True)
+
+    def test_restore_deleted_musics(self):
+        response = client.post(
+            reverse('restore_deleted_musics'),
+            data=json.dumps(MusicSerializer(
+                self.deleted_musics[:4], many=True).data),
+            content_type='application/json'
+        )
+        count_deleted_musics = client.get(reverse('count_deleted_musics'))
+        self.assertEqual(response.data, 4)
+        self.assertEqual(count_deleted_musics.data, 6)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+
+class EmptyListTest(TestCase):
+
+    def setUp(self):
+        MusicFactory.create_batch(10, deleted=True)
+
+    def test_restore_deleted_musics(self):
+        response = client.delete(reverse('empty_list'))
+        count_deleted_musics = client.get(reverse('count_deleted_musics'))
+        self.assertEqual(count_deleted_musics.data, 0)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+
+class DefinitiveDeleteMusicTest(TestCase):
+
+    def setUp(self):
+        self.deleted_music = MusicFactory.create(deleted=True)
+        self.music = MusicFactory.create()
+
+    def test_definitive_delete_music(self):
+        response = client.delete(
+            reverse('definitive_delete_music', kwargs={'id': self.deleted_music.id}))
+        count_deleted_musics = client.get(reverse('count_deleted_musics'))
+        self.assertEqual(count_deleted_musics.data, 0)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_definitive_delete_nonexistent_music(self):
+        response = client.delete(
+            reverse('definitive_delete_music', kwargs={'id': 100}))
+        self.assertEqual(response.data['message'], 'Music not found!')
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_definitive_delete_not_deleted_music(self):
+        response = client.delete(
+            reverse('definitive_delete_music', kwargs={'id': self.music.id}))
         self.assertEqual(response.data['message'], 'Music not found!')
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)

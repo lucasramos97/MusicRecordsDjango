@@ -4,6 +4,7 @@ from app.models import Music
 
 fake = Factory.create()
 
+
 class MusicFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Music

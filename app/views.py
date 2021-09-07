@@ -6,6 +6,7 @@ from rest_framework import status
 from .models import Music
 from .serializers import MusicSerializer
 
+
 @api_view(['GET', 'PUT', 'DELETE'])
 def get_update_delete_music(request, id):
 
@@ -21,6 +22,7 @@ def get_update_delete_music(request, id):
     elif request.method == 'DELETE':
         return __delete_music(music)
 
+
 @api_view(['GET', 'POST'])
 def get_post_musics(request):
 
@@ -28,6 +30,51 @@ def get_post_musics(request):
         return __get_musics(request)
     elif request.method == 'POST':
         return __post_music(request)
+
+
+@api_view(['GET'])
+def count_deleted_musics(request):
+
+    result = Music.objects.filter(deleted=True).count()
+
+    return Response(result)
+
+
+@api_view(['GET'])
+def get_deleted_musics(request):
+
+    return __get_musics(request, deleted=True)
+
+
+@api_view(['POST'])
+def restore_deleted_musics(request):
+
+    music_ids = [music['id'] for music in request.data]
+    result = Music.objects.filter(id__in=music_ids).update(deleted=False)
+
+    return Response(result)
+
+
+@api_view(['DELETE'])
+def empty_list(request):
+
+    Music.objects.filter(deleted=True).delete()
+
+    return Response()
+
+
+@api_view(['DELETE'])
+def definitive_delete_music(request, id):
+
+    try:
+
+        music = __get_music_if_not_exists(id)
+        music.delete()
+
+        return Response()
+    except Music.DoesNotExist:
+        return Response({'message': 'Music not found!'}, status=status.HTTP_404_NOT_FOUND)
+
 
 def __get_music_if_exists(id):
 
@@ -37,22 +84,25 @@ def __get_music_if_exists(id):
 
     return music
 
+
 def __get_music_by_id(music):
 
     serializer = MusicSerializer(music)
 
     return Response(serializer.data)
 
-def __get_musics(request):
+
+def __get_musics(request, deleted=False):
 
     page = request.GET.get('page') or 1
     size = request.GET.get('size') or 5
 
-    musics = Music.objects.filter(deleted=False)
+    musics = Music.objects.filter(deleted=deleted)
     paginator = Paginator(musics, size)
     serializer = MusicSerializer(paginator.get_page(page), many=True)
 
     return Response({'content': serializer.data, 'total': paginator.count})
+
 
 def __valid_music(request):
 
@@ -74,6 +124,7 @@ def __valid_music(request):
 
     return title, artist, release_date, duration
 
+
 def __post_music(request):
 
     try:
@@ -88,10 +139,11 @@ def __post_music(request):
             feat=request.data.get('feat') or False
         )
         serializer = MusicSerializer(music)
-        
+
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     except FieldError as e:
         return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
 
 def __put_music(music, request):
 
@@ -105,10 +157,20 @@ def __put_music(music, request):
     except FieldError as e:
         return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+
 def __delete_music(music):
 
     music.deleted = True
     music.save()
     serializer = MusicSerializer(music)
-    
+
     return Response(serializer.data)
+
+
+def __get_music_if_not_exists(id):
+
+    music = Music.objects.get(id=id)
+    if not music.deleted:
+        raise Music.DoesNotExist
+
+    return music
