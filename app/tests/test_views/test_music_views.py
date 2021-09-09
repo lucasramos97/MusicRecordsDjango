@@ -5,7 +5,7 @@ from django.test import TestCase, Client
 from django.urls import reverse
 from app.models import Music
 from app.serializers import MusicSerializer
-from .factories import MusicFactory
+from ..factories import MusicFactory
 
 client = Client()
 
