@@ -1,3 +1,4 @@
+import datetime
 import jwt
 from django.core.validators import validate_email
 from django.db import IntegrityError
@@ -6,8 +7,8 @@ from django.core.exceptions import FieldError, ValidationError
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
-from ..models import User
-from ..serializers import UserSerializer
+from app.models import User
+from app.serializers import UserSerializer
 
 
 @api_view(['POST'])
@@ -21,7 +22,7 @@ def login(request):
         if not user.check_password(password):
             return Response({'message': 'Password invalid!'}, status=status.HTTP_401_UNAUTHORIZED)
 
-        token = jwt.encode({'user_id': user.id},
+        token = jwt.encode({'user_id': user.id, 'exp': __token_expiration_time()},
                            settings.SECRET_KEY, algorithm='HS256')
 
         return Response({
@@ -84,3 +85,7 @@ def __valid_user(request):
 
     (email, password) = __valid_login(request)
     return (username, email, password)
+
+
+def __token_expiration_time():
+    return datetime.datetime.utcnow() + datetime.timedelta(days=1)

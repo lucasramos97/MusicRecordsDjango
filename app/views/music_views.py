@@ -3,8 +3,8 @@ from django.core.exceptions import FieldError
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
-from ..models import Music
-from ..serializers import MusicSerializer
+from app.models import Music
+from app.serializers import MusicSerializer
 
 
 @api_view(['GET', 'PUT', 'DELETE'])

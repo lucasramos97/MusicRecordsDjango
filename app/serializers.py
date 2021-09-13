@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Music, User
+from app.models import Music, User
 
 
 class MusicSerializer(serializers.ModelSerializer):

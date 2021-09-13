@@ -1,5 +1,5 @@
 from django.conf.urls import url
-from .views import music_views, user_views
+from app.views import music_views, user_views
 
 urlpatterns = [
 

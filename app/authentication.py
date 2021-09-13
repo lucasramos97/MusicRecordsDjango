@@ -1,14 +1,11 @@
 import jwt
 from django.conf import settings
 from rest_framework import authentication
-from rest_framework.exceptions import AuthenticationFailed
-from jwt.exceptions import DecodeError
+from rest_framework import exceptions
 from app.models import User
 
 
-class BearerAuthentication(authentication.TokenAuthentication):
-
-    keyword = 'Bearer'
+class BearerAuthentication(authentication.BaseAuthentication):
 
     def authenticate(self, request):
 
@@ -18,17 +15,17 @@ class BearerAuthentication(authentication.TokenAuthentication):
         auth = authentication.get_authorization_header(request).split()
 
         if not auth:
-            raise AuthenticationFailed(
+            raise exceptions.AuthenticationFailed(
                 'Header Authorization not present!')
 
         scheme = auth[0]
 
-        if scheme != self.keyword.encode():
-            raise AuthenticationFailed(
+        if scheme != b'Bearer':
+            raise exceptions.AuthenticationFailed(
                 'No Bearer HTTP authentication scheme!')
 
         if len(auth) == 1:
-            raise AuthenticationFailed(
+            raise exceptions.AuthenticationFailed(
                 'No token provided!')
 
         token = auth[1]
@@ -37,8 +34,10 @@ class BearerAuthentication(authentication.TokenAuthentication):
 
             payload = jwt.decode(
                 token, settings.SECRET_KEY, algorithms='HS256')
-        except DecodeError:
-            raise AuthenticationFailed('Invalid token!')
+        except jwt.exceptions.DecodeError:
+            raise exceptions.AuthenticationFailed('Invalid token!')
+        except jwt.ExpiredSignatureError as e:
+            raise exceptions.AuthenticationFailed(str(e))
 
         return self.authenticate_credentials(payload['user_id'])
 
@@ -47,10 +46,10 @@ class BearerAuthentication(authentication.TokenAuthentication):
         try:
             user = User.objects.get(id=user_id)
         except User.DoesNotExist:
-            raise AuthenticationFailed('Invalid token!')
+            raise exceptions.AuthenticationFailed('Invalid token!')
 
         if not user.is_active:
-            raise AuthenticationFailed('User inactive!')
+            raise exceptions.AuthenticationFailed('User inactive!')
 
         return (user, None)
 
