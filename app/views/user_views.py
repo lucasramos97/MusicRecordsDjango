@@ -1,8 +1,9 @@
+import jwt
 from django.core.validators import validate_email
 from django.db import IntegrityError
+from django.conf import settings
 from django.core.exceptions import FieldError, ValidationError
 from rest_framework.decorators import api_view
-from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 from rest_framework import status
 from ..models import User
@@ -20,10 +21,11 @@ def login(request):
         if not user.check_password(password):
             return Response({'message': 'Password invalid!'}, status=status.HTTP_401_UNAUTHORIZED)
 
-        (token, _) = Token.objects.get_or_create(user=user)
+        token = jwt.encode({'user_id': user.id},
+                           settings.SECRET_KEY, algorithm='HS256')
 
         return Response({
-            'token': token.key,
+            'token': token,
             'username': user.username,
             'email': user.email,
         }, status=status.HTTP_200_OK)
