@@ -4,7 +4,7 @@ from django.contrib.auth.models import AbstractUser
 
 class User(AbstractUser):
 
-    username = models.CharField(max_length=100, unique=False)
+    username = models.CharField(max_length=100)
     email = models.EmailField(max_length=100, unique=True)
 
     USERNAME_FIELD = 'email'
@@ -23,6 +23,7 @@ class Music(models.Model):
     number_views = models.IntegerField(null=True, blank=True, default=0)
     feat = models.BooleanField(null=True, blank=True, default=False)
     deleted = models.BooleanField(null=True, blank=True, default=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

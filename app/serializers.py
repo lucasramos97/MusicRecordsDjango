@@ -5,7 +5,7 @@ from .models import Music, User
 class MusicSerializer(serializers.ModelSerializer):
     class Meta:
         model = Music
-        fields = '__all__'
+        exclude = ['user']
 
 
 class UserSerializer(serializers.ModelSerializer):

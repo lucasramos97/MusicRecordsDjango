@@ -11,15 +11,17 @@ from ..serializers import MusicSerializer
 def get_update_delete_music(request, id):
 
     try:
-        music = __get_music_if_exists(id)
+        music = __get_music_if_exists(request, id)
     except Music.DoesNotExist:
         return Response({'message': 'Music not found!'}, status=status.HTTP_404_NOT_FOUND)
 
     if request.method == 'GET':
         return __get_music_by_id(music)
-    elif request.method == 'PUT':
+
+    if request.method == 'PUT':
         return __put_music(music, request)
-    elif request.method == 'DELETE':
+
+    if request.method == 'DELETE':
         return __delete_music(music)
 
 
@@ -28,14 +30,15 @@ def get_post_musics(request):
 
     if request.method == 'GET':
         return __get_musics(request)
-    elif request.method == 'POST':
+
+    if request.method == 'POST':
         return __post_music(request)
 
 
 @api_view(['GET'])
 def count_deleted_musics(request):
 
-    result = Music.objects.filter(deleted=True).count()
+    result = Music.objects.filter(deleted=True, user=request.user).count()
 
     return Response(result)
 
@@ -50,7 +53,8 @@ def get_deleted_musics(request):
 def restore_deleted_musics(request):
 
     music_ids = [music['id'] for music in request.data]
-    result = Music.objects.filter(id__in=music_ids).update(deleted=False)
+    result = Music.objects.filter(
+        id__in=music_ids, user=request.user).update(deleted=False)
 
     return Response(result)
 
@@ -58,7 +62,7 @@ def restore_deleted_musics(request):
 @api_view(['DELETE'])
 def empty_list(request):
 
-    Music.objects.filter(deleted=True).delete()
+    Music.objects.filter(deleted=True, user=request.user).delete()
 
     return Response()
 
@@ -68,7 +72,7 @@ def definitive_delete_music(request, id):
 
     try:
 
-        music = __get_music_if_not_exists(id)
+        music = __get_music_if_not_exists(request, id)
         music.delete()
 
         return Response()
@@ -76,9 +80,9 @@ def definitive_delete_music(request, id):
         return Response({'message': 'Music not found!'}, status=status.HTTP_404_NOT_FOUND)
 
 
-def __get_music_if_exists(id):
+def __get_music_if_exists(request, id):
 
-    music = Music.objects.get(id=id)
+    music = Music.objects.get(id=id, user=request.user)
     if music.deleted:
         raise Music.DoesNotExist
 
@@ -97,7 +101,7 @@ def __get_musics(request, deleted=False):
     page = request.GET.get('page') or 1
     size = request.GET.get('size') or 5
 
-    musics = Music.objects.filter(deleted=deleted)
+    musics = Music.objects.filter(deleted=deleted, user=request.user)
     paginator = Paginator(musics, size)
     serializer = MusicSerializer(paginator.get_page(page), many=True)
 
@@ -122,21 +126,22 @@ def __valid_music(request):
     if not duration:
         raise FieldError('Duration is required!')
 
-    return title, artist, release_date, duration
+    return (title, artist, release_date, duration)
 
 
 def __post_music(request):
 
     try:
 
-        title, artist, release_date, duration = __valid_music(request)
+        (title, artist, release_date, duration) = __valid_music(request)
         (music, _) = Music.objects.get_or_create(
             title=title,
             artist=artist,
             release_date=release_date,
             duration=duration,
             number_views=request.data.get('number_views') or 0,
-            feat=request.data.get('feat') or False
+            feat=request.data.get('feat') or False,
+            user=request.user
         )
         serializer = MusicSerializer(music)
 
@@ -167,9 +172,9 @@ def __delete_music(music):
     return Response(serializer.data)
 
 
-def __get_music_if_not_exists(id):
+def __get_music_if_not_exists(request, id):
 
-    music = Music.objects.get(id=id)
+    music = Music.objects.get(id=id, user=request.user)
     if not music.deleted:
         raise Music.DoesNotExist
 

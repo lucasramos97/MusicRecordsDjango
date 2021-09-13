@@ -14,7 +14,7 @@ def login(request):
 
     try:
 
-        email, password = __valid_login(request)
+        (email, password) = __valid_login(request)
         validate_email(email)
         user = User.objects.get(email=email)
         if not user.check_password(password):
@@ -40,7 +40,7 @@ def create_user(request):
 
     try:
 
-        username, email, password = __valid_user(request)
+        (username, email, password) = __valid_user(request)
         user = User.objects.create_user(
             username=username,
             email=email,
@@ -71,7 +71,7 @@ def __valid_login(request):
     if not password:
         raise FieldError('Password is required!')
 
-    return email, password
+    return (email, password)
 
 
 def __valid_user(request):
@@ -80,5 +80,5 @@ def __valid_user(request):
     if not username:
         raise FieldError('Username is required!')
 
-    email, password = __valid_login(request)
-    return username, email, password
+    (email, password) = __valid_login(request)
+    return (username, email, password)

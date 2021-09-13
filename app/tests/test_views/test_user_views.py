@@ -3,25 +3,25 @@ from rest_framework import status
 from django.test import TestCase, Client
 from django.urls import reverse
 from app.models import User
-from app.serializers import UserSerializer
 
 client = Client()
 
 
 class LoginTest(TestCase):
 
-    def setUp(self):
+    @classmethod
+    def setUpTestData(cls):
 
-        self.user = {
+        cls.user = {
             'username': 'test',
             'email': 'test@email.com',
             'password': '123'
         }
 
         User.objects.create_user(
-            username=self.user['username'],
-            email=self.user['email'],
-            password=self.user['password']
+            username=cls.user['username'],
+            email=cls.user['email'],
+            password=cls.user['password']
         )
 
     def test_login(self):
@@ -89,8 +89,10 @@ class LoginTest(TestCase):
 
 class CreateUserTest(TestCase):
 
-    def setUp(self):
-        self.user = {
+    @classmethod
+    def setUpTestData(cls):
+
+        cls.user = {
             'username': 'test',
             'email': 'test@email.com',
             'password': '123',
