@@ -14,7 +14,7 @@ class User(AbstractUser):
 class Music(models.Model):
     class Meta:
         db_table = 'musics'
-        ordering = ['title', 'artist']
+        ordering = ['artist', 'title']
 
     title = models.CharField(max_length=100)
     artist = models.CharField(max_length=100)
