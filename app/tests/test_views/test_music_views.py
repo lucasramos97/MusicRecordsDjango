@@ -301,9 +301,6 @@ class PostMusicTest(TestCase):
         music = Music.objects.get(id=response.data['id'])
         serializer = MusicSerializer(music)
 
-        self.assertEqual(response.data['number_views'], 0)
-        self.assertFalse(response.data['feat'])
-        self.assertFalse(response.data['deleted'])
         self.assertEqual(response.data, serializer.data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
@@ -648,20 +645,17 @@ class DeleteMusicTest(TestCase):
             **self.user1_header
         )
 
-        serializer = MusicSerializer(self.music)
+        deleted_music = Music.objects.get(id=self.music.id)
+        serializer = MusicSerializer(deleted_music)
 
         keys = ['id', 'title', 'artist', 'release_date',
-                'duration', 'number_views', 'feat', 'created_at']
+                'duration', 'number_views', 'feat', 'created_at', 'updated_at']
 
         equal_values_response_music = {x: response.data[x] for x in keys}
         equal_values_db_music = {x: serializer.data[x] for x in keys}
 
-        updated_at_response = response.data['updated_at']
-        updated_at_db = serializer.data['updated_at']
-
         self.assertEqual(equal_values_response_music, equal_values_db_music)
-        self.assertTrue(response.data['deleted'])
-        self.assertGreater(updated_at_response, updated_at_db)
+        self.assertTrue(deleted_music.deleted)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_delete_nonexistent_music_by_id(self):

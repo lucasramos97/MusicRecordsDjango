@@ -11,4 +11,4 @@ class UserSerializer(serializers.ModelSerializer):
 class MusicSerializer(serializers.ModelSerializer):
     class Meta:
         model = Music
-        exclude = ['user']
+        exclude = ['deleted', 'user']
