@@ -1,3 +1,4 @@
+from datetime import datetime
 from django.core.paginator import Paginator
 from django.core.exceptions import FieldError
 from rest_framework.decorators import api_view
@@ -5,24 +6,10 @@ from rest_framework.response import Response
 from rest_framework import status
 from app.models import Music
 from app.serializers import MusicSerializer
-
-
-@api_view(['GET', 'PUT', 'DELETE'])
-def get_update_delete_music(request, id):
-
-    try:
-        music = __get_music_if_exists(request, id)
-    except Music.DoesNotExist:
-        return Response({'message': 'Music not found!'}, status=status.HTTP_404_NOT_FOUND)
-
-    if request.method == 'GET':
-        return __get_music_by_id(music)
-
-    if request.method == 'PUT':
-        return __put_music(music, request)
-
-    if request.method == 'DELETE':
-        return __delete_music(music)
+from app.messages import (ARTIST_IS_REQUIRED, DURATION_IS_REQUIRED, ID_IS_REQUIRED,
+                          MUSIC_NOT_FOUND, RELEASE_DATE_CANNOT_BE_FUTURE,
+                          RELEASE_DATE_IS_REQUIRED, TITLE_IS_REQUIRED,
+                          WRONG_DURATION_FORMAT, WRONG_RELEASE_DATE_FORMAT)
 
 
 @api_view(['GET', 'POST'])
@@ -35,6 +22,25 @@ def get_post_musics(request):
         return __post_music(request)
 
 
+@api_view(['GET', 'PUT', 'DELETE'])
+def get_update_delete_music(request, id):
+
+    try:
+
+        music = __get_music_if_exists(request, id)
+    except Music.DoesNotExist:
+        return Response({'message': MUSIC_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == 'GET':
+        return __get_music_by_id(music)
+
+    if request.method == 'PUT':
+        return __put_music(music, request)
+
+    if request.method == 'DELETE':
+        return __delete_music(music)
+
+
 @api_view(['GET'])
 def count_deleted_musics(request):
 
@@ -45,26 +51,20 @@ def count_deleted_musics(request):
 
 @api_view(['GET'])
 def get_deleted_musics(request):
-
     return __get_musics(request, deleted=True)
 
 
 @api_view(['POST'])
 def restore_deleted_musics(request):
 
-    music_ids = [music['id'] for music in request.data]
-    result = Music.objects.filter(
-        id__in=music_ids, user=request.user).update(deleted=False)
+    music_ids = [music.get('id') for music in request.data]
+    if music_ids.count(None) > 0:
+        return Response({'message': ID_IS_REQUIRED}, status=status.HTTP_400_BAD_REQUEST)
+
+    result = Music.objects.filter(id__in=music_ids, deleted=True,
+                                  user=request.user).update(deleted=False)
 
     return Response(result)
-
-
-@api_view(['DELETE'])
-def empty_list(request):
-
-    Music.objects.filter(deleted=True, user=request.user).delete()
-
-    return Response()
 
 
 @api_view(['DELETE'])
@@ -77,7 +77,15 @@ def definitive_delete_music(request, id):
 
         return Response()
     except Music.DoesNotExist:
-        return Response({'message': 'Music not found!'}, status=status.HTTP_404_NOT_FOUND)
+        return Response({'message': MUSIC_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['DELETE'])
+def empty_list(request):
+
+    result = Music.objects.filter(deleted=True, user=request.user).delete()
+
+    return Response(result[0])
 
 
 def __get_music_if_exists(request, id):
@@ -112,19 +120,34 @@ def __valid_music(request):
 
     title = request.data.get('title')
     if not title:
-        raise FieldError('Title is required!')
+        raise FieldError(TITLE_IS_REQUIRED)
 
     artist = request.data.get('artist')
     if not artist:
-        raise FieldError('Artist is required!')
+        raise FieldError(ARTIST_IS_REQUIRED)
 
     release_date = request.data.get('release_date')
     if not release_date:
-        raise FieldError('Release Date is required!')
+        raise FieldError(RELEASE_DATE_IS_REQUIRED)
 
     duration = request.data.get('duration')
     if not duration:
-        raise FieldError('Duration is required!')
+        raise FieldError(DURATION_IS_REQUIRED)
+
+    try:
+
+        release_date_obj = datetime.strptime(release_date, '%Y-%m-%d')
+    except ValueError:
+        raise FieldError(WRONG_RELEASE_DATE_FORMAT)
+
+    if release_date_obj > datetime.today():
+        raise FieldError(RELEASE_DATE_CANNOT_BE_FUTURE)
+
+    try:
+
+        datetime.strptime(duration, '%H:%M:%S')
+    except ValueError:
+        raise FieldError(WRONG_DURATION_FORMAT)
 
     return (title, artist, release_date, duration)
 
@@ -158,6 +181,7 @@ def __put_music(music, request):
         serializer = MusicSerializer(music, request.data)
         serializer.is_valid()
         serializer.save()
+
         return Response(serializer.data)
     except FieldError as e:
         return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)

@@ -42,13 +42,13 @@ urlpatterns = [
         name='restore_deleted_musics'
     ),
     url(
-        r'^musics/empty-list/?$',
-        music_views.empty_list,
-        name='empty_list'
-    ),
-    url(
         r'^musics/definitive/(?P<id>[0-9]+)$',
         music_views.definitive_delete_music,
         name='definitive_delete_music'
+    ),
+    url(
+        r'^musics/empty-list/?$',
+        music_views.empty_list,
+        name='empty_list'
     ),
 ]

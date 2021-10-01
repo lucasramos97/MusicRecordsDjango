@@ -3,6 +3,8 @@ from django.conf import settings
 from rest_framework import authentication
 from rest_framework import exceptions
 from app.models import User
+from app.messages import (HEADER_AUTHORIZATION_NOT_PRESENT, INVALID_TOKEN,
+                          NO_BEARER_AUTHENTICATION_SCHEME, NO_TOKEN_PROVIDED)
 
 
 class BearerAuthentication(authentication.BaseAuthentication):
@@ -16,17 +18,16 @@ class BearerAuthentication(authentication.BaseAuthentication):
 
         if not auth:
             raise exceptions.AuthenticationFailed(
-                'Header Authorization not present!')
+                HEADER_AUTHORIZATION_NOT_PRESENT)
 
         scheme = auth[0]
 
         if scheme != b'Bearer':
             raise exceptions.AuthenticationFailed(
-                'No Bearer HTTP authentication scheme!')
+                NO_BEARER_AUTHENTICATION_SCHEME)
 
         if len(auth) == 1:
-            raise exceptions.AuthenticationFailed(
-                'No token provided!')
+            raise exceptions.AuthenticationFailed(NO_TOKEN_PROVIDED)
 
         token = auth[1]
 
@@ -35,21 +36,19 @@ class BearerAuthentication(authentication.BaseAuthentication):
             payload = jwt.decode(
                 token, settings.SECRET_KEY, algorithms='HS256')
         except jwt.exceptions.DecodeError:
-            raise exceptions.AuthenticationFailed('Invalid token!')
+            raise exceptions.AuthenticationFailed(INVALID_TOKEN)
         except jwt.ExpiredSignatureError as e:
             raise exceptions.AuthenticationFailed(str(e))
 
-        return self.authenticate_credentials(payload['user_id'])
+        return self.authenticate_credentials(payload.get('user_id'))
 
     def authenticate_credentials(self, user_id):
 
         try:
+
             user = User.objects.get(id=user_id)
         except User.DoesNotExist:
-            raise exceptions.AuthenticationFailed('Invalid token!')
-
-        if not user.is_active:
-            raise exceptions.AuthenticationFailed('User inactive!')
+            raise exceptions.AuthenticationFailed(INVALID_TOKEN)
 
         return (user, None)
 

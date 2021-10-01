@@ -142,7 +142,7 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'app.authentication.BearerAuthentication',
     ],
-    'EXCEPTION_HANDLER': 'app.utils.custom_exception_handler',
+    'EXCEPTION_HANDLER': 'app.handler.custom_exception_handler',
 }
 
 CORS_ALLOWED_ORIGINS = [
