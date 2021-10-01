@@ -211,7 +211,7 @@ class PostMusicTest(TestCase):
         self.assertEqual(expected_message, response.data.get('message'))
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
 
-    def test_post_music_wrong_release_date_format(self):
+    def test_post_music_wrong_duration_format(self):
 
         self.minimal_attributes_music['duration'] = self.minimal_attributes_music.get(
             'duration').replace(':', '/')
