@@ -2,9 +2,8 @@ import jwt
 from django.conf import settings
 from rest_framework import authentication
 from rest_framework import exceptions
+from app import messages
 from app.models import User
-from app.messages import (HEADER_AUTHORIZATION_NOT_PRESENT, INVALID_TOKEN,
-                          NO_BEARER_AUTHENTICATION_SCHEME, NO_TOKEN_PROVIDED)
 
 
 class BearerAuthentication(authentication.BaseAuthentication):
@@ -18,16 +17,16 @@ class BearerAuthentication(authentication.BaseAuthentication):
 
         if not auth:
             raise exceptions.AuthenticationFailed(
-                HEADER_AUTHORIZATION_NOT_PRESENT)
+                messages.HEADER_AUTHORIZATION_NOT_PRESENT)
 
         scheme = auth[0]
 
         if scheme != b'Bearer':
             raise exceptions.AuthenticationFailed(
-                NO_BEARER_AUTHENTICATION_SCHEME)
+                messages.NO_BEARER_AUTHENTICATION_SCHEME)
 
         if len(auth) == 1:
-            raise exceptions.AuthenticationFailed(NO_TOKEN_PROVIDED)
+            raise exceptions.AuthenticationFailed(messages.NO_TOKEN_PROVIDED)
 
         token = auth[1]
 
@@ -36,7 +35,7 @@ class BearerAuthentication(authentication.BaseAuthentication):
             payload = jwt.decode(
                 token, settings.SECRET_KEY, algorithms='HS256')
         except jwt.exceptions.DecodeError:
-            raise exceptions.AuthenticationFailed(INVALID_TOKEN)
+            raise exceptions.AuthenticationFailed(messages.INVALID_TOKEN)
         except jwt.ExpiredSignatureError as e:
             raise exceptions.AuthenticationFailed(str(e))
 
@@ -48,7 +47,7 @@ class BearerAuthentication(authentication.BaseAuthentication):
 
             user = User.objects.get(id=user_id)
         except User.DoesNotExist:
-            raise exceptions.AuthenticationFailed(INVALID_TOKEN)
+            raise exceptions.AuthenticationFailed(messages.INVALID_TOKEN)
 
         return (user, None)
 

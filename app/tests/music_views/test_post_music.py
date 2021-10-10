@@ -4,20 +4,13 @@ from rest_framework import status
 from django.test import TestCase
 from django.urls import reverse
 from parameterized import parameterized
+from app import messages
 from app.models import Music
 from app.serializers import MusicSerializer
 from app.tests.factories import create_user
-from .base_tdd import (EMPTY_AUTHORIZATION_HEADER, INVALID_TOKEN_HEADER,
-                       NO_TOKEN_HEADER, generate_header, get_no_bearer_header,
-                       get_client)
-from app.messages import (ARTIST_IS_REQUIRED, DURATION_IS_REQUIRED,
-                          HEADER_AUTHORIZATION_NOT_PRESENT, INVALID_TOKEN,
-                          NO_BEARER_AUTHENTICATION_SCHEME, NO_TOKEN_PROVIDED,
-                          RELEASE_DATE_CANNOT_BE_FUTURE, RELEASE_DATE_IS_REQUIRED,
-                          TITLE_IS_REQUIRED, WRONG_DURATION_FORMAT,
-                          WRONG_RELEASE_DATE_FORMAT)
+from . import base_tdd
 
-client = get_client()
+client = base_tdd.get_client()
 
 
 class PostMusicTest(TestCase):
@@ -26,7 +19,7 @@ class PostMusicTest(TestCase):
     def setUpTestData(cls):
 
         cls.db_user1 = create_user()
-        cls.header_user1 = generate_header(cls.db_user1)
+        cls.header_user1 = base_tdd.generate_header(cls.db_user1)
 
     def setUp(self):
 
@@ -157,10 +150,10 @@ class PostMusicTest(TestCase):
         self.assertEqual(status.HTTP_201_CREATED, response.status_code)
 
     @parameterized.expand([
-        ('title', TITLE_IS_REQUIRED),
-        ('artist', ARTIST_IS_REQUIRED),
-        ('release_date', RELEASE_DATE_IS_REQUIRED),
-        ('duration', DURATION_IS_REQUIRED),
+        ('title', messages.TITLE_IS_REQUIRED),
+        ('artist', messages.ARTIST_IS_REQUIRED),
+        ('release_date', messages.RELEASE_DATE_IS_REQUIRED),
+        ('duration', messages.DURATION_IS_REQUIRED),
     ])
     def test_post_music_without_required_fields(self, field, expected_message):
 
@@ -189,7 +182,7 @@ class PostMusicTest(TestCase):
             **self.header_user1
         )
 
-        expected_message = RELEASE_DATE_CANNOT_BE_FUTURE
+        expected_message = messages.RELEASE_DATE_CANNOT_BE_FUTURE
 
         self.assertEqual(expected_message, response.data.get('message'))
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
@@ -206,7 +199,7 @@ class PostMusicTest(TestCase):
             **self.header_user1
         )
 
-        expected_message = WRONG_RELEASE_DATE_FORMAT
+        expected_message = messages.WRONG_RELEASE_DATE_FORMAT
 
         self.assertEqual(expected_message, response.data.get('message'))
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
@@ -223,13 +216,16 @@ class PostMusicTest(TestCase):
             **self.header_user1
         )
 
-        self.assertEqual(WRONG_DURATION_FORMAT, response.data.get('message'))
+        expected_message = messages.WRONG_DURATION_FORMAT
+
+        self.assertEqual(expected_message, response.data.get('message'))
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
 
     @parameterized.expand([
-        (INVALID_TOKEN_HEADER, INVALID_TOKEN),
-        (EMPTY_AUTHORIZATION_HEADER, HEADER_AUTHORIZATION_NOT_PRESENT),
-        (NO_TOKEN_HEADER, NO_TOKEN_PROVIDED),
+        (base_tdd.INVALID_TOKEN_HEADER, messages.INVALID_TOKEN),
+        (base_tdd.EMPTY_AUTHORIZATION_HEADER,
+         messages.HEADER_AUTHORIZATION_NOT_PRESENT),
+        (base_tdd.NO_TOKEN_HEADER, messages.NO_TOKEN_PROVIDED),
     ])
     def test_post_music_with_inappropriate_tokens(self, header, expected_message):
 
@@ -251,7 +247,7 @@ class PostMusicTest(TestCase):
             content_type='application/json'
         )
 
-        expected_message = HEADER_AUTHORIZATION_NOT_PRESENT
+        expected_message = messages.HEADER_AUTHORIZATION_NOT_PRESENT
 
         self.assertEqual(expected_message, response.data.get('message'))
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
@@ -262,10 +258,10 @@ class PostMusicTest(TestCase):
             reverse('get_post_musics'),
             data=json.dumps(self.minimal_attributes_music),
             content_type='application/json',
-            **get_no_bearer_header(self.header_user1)
+            **base_tdd.get_no_bearer_header(self.header_user1)
         )
 
-        expected_message = NO_BEARER_AUTHENTICATION_SCHEME
+        expected_message = messages.NO_BEARER_AUTHENTICATION_SCHEME
 
         self.assertEqual(expected_message, response.data.get('message'))
         self.assertEqual(status.HTTP_401_UNAUTHORIZED, response.status_code)

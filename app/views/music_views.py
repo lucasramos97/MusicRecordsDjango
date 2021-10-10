@@ -4,12 +4,9 @@ from django.core.exceptions import FieldError
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
+from app import messages
 from app.models import Music
 from app.serializers import MusicSerializer
-from app.messages import (ARTIST_IS_REQUIRED, DURATION_IS_REQUIRED, ID_IS_REQUIRED,
-                          MUSIC_NOT_FOUND, RELEASE_DATE_CANNOT_BE_FUTURE,
-                          RELEASE_DATE_IS_REQUIRED, TITLE_IS_REQUIRED,
-                          WRONG_DURATION_FORMAT, WRONG_RELEASE_DATE_FORMAT)
 
 
 @api_view(['GET', 'POST'])
@@ -29,7 +26,7 @@ def get_update_delete_music(request, id):
 
         music = __get_music_if_exists(request, id)
     except Music.DoesNotExist:
-        return Response({'message': MUSIC_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
+        return Response({'message': messages.MUSIC_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
 
     if request.method == 'GET':
         return __get_music_by_id(music)
@@ -59,7 +56,7 @@ def restore_deleted_musics(request):
 
     music_ids = [music.get('id') for music in request.data]
     if music_ids.count(None) > 0:
-        return Response({'message': ID_IS_REQUIRED}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'message': messages.ID_IS_REQUIRED}, status=status.HTTP_400_BAD_REQUEST)
 
     result = Music.objects.filter(id__in=music_ids, deleted=True,
                                   user=request.user).update(deleted=False)
@@ -77,7 +74,7 @@ def definitive_delete_music(request, id):
 
         return Response()
     except Music.DoesNotExist:
-        return Response({'message': MUSIC_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
+        return Response({'message': messages.MUSIC_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
 
 
 @api_view(['DELETE'])
@@ -120,34 +117,34 @@ def __valid_music(request):
 
     title = request.data.get('title')
     if not title:
-        raise FieldError(TITLE_IS_REQUIRED)
+        raise FieldError(messages.TITLE_IS_REQUIRED)
 
     artist = request.data.get('artist')
     if not artist:
-        raise FieldError(ARTIST_IS_REQUIRED)
+        raise FieldError(messages.ARTIST_IS_REQUIRED)
 
     release_date = request.data.get('release_date')
     if not release_date:
-        raise FieldError(RELEASE_DATE_IS_REQUIRED)
+        raise FieldError(messages.RELEASE_DATE_IS_REQUIRED)
 
     duration = request.data.get('duration')
     if not duration:
-        raise FieldError(DURATION_IS_REQUIRED)
+        raise FieldError(messages.DURATION_IS_REQUIRED)
 
     try:
 
         release_date_obj = datetime.strptime(release_date, '%Y-%m-%d')
     except ValueError:
-        raise FieldError(WRONG_RELEASE_DATE_FORMAT)
+        raise FieldError(messages.WRONG_RELEASE_DATE_FORMAT)
 
     if release_date_obj > datetime.today():
-        raise FieldError(RELEASE_DATE_CANNOT_BE_FUTURE)
+        raise FieldError(messages.RELEASE_DATE_CANNOT_BE_FUTURE)
 
     try:
 
         datetime.strptime(duration, '%H:%M:%S')
     except ValueError:
-        raise FieldError(WRONG_DURATION_FORMAT)
+        raise FieldError(messages.WRONG_DURATION_FORMAT)
 
     return (title, artist, release_date, duration)
 

@@ -3,17 +3,13 @@ from rest_framework import status
 from django.test import TestCase
 from django.urls import reverse
 from parameterized import parameterized
+from app import messages
 from app.models import Music
 from app.serializers import MusicSerializer
 from app.tests.factories import MusicFactory, create_user
-from .base_tdd import (EMPTY_AUTHORIZATION_HEADER, INVALID_TOKEN_HEADER,
-                       NO_TOKEN_HEADER, generate_header, get_no_bearer_header,
-                       get_client)
-from app.messages import (HEADER_AUTHORIZATION_NOT_PRESENT, ID_IS_REQUIRED,
-                          INVALID_TOKEN, NO_BEARER_AUTHENTICATION_SCHEME,
-                          NO_TOKEN_PROVIDED)
+from . import base_tdd
 
-client = get_client()
+client = base_tdd.get_client()
 
 
 class RestoreDeletedMusicsTest(TestCase):
@@ -22,10 +18,10 @@ class RestoreDeletedMusicsTest(TestCase):
     def setUpTestData(cls):
 
         cls.db_user1 = create_user()
-        cls.header_user1 = generate_header(cls.db_user1)
+        cls.header_user1 = base_tdd.generate_header(cls.db_user1)
 
         cls.db_user2 = create_user('2')
-        cls.header_user2 = generate_header(cls.db_user2)
+        cls.header_user2 = base_tdd.generate_header(cls.db_user2)
 
     def setUp(self):
 
@@ -46,13 +42,13 @@ class RestoreDeletedMusicsTest(TestCase):
             **self.header_user1
         )
 
-        count_deleted_musics_user1 = Music.objects.filter(deleted=False,
-                                                          user=self.db_user1).count()
+        count_musics_user1 = Music.objects.filter(deleted=False,
+                                                  user=self.db_user1).count()
         count_deleted_musics_user2 = Music.objects.filter(deleted=True,
                                                           user=self.db_user2).count()
 
         self.assertEqual(10, response.data)
-        self.assertEqual(11, count_deleted_musics_user1)
+        self.assertEqual(11, count_musics_user1)
         self.assertEqual(10, count_deleted_musics_user2)
         self.assertEqual(status.HTTP_200_OK, response.status_code)
 
@@ -72,13 +68,13 @@ class RestoreDeletedMusicsTest(TestCase):
             **self.header_user1
         )
 
-        count_deleted_musics_user1 = Music.objects.filter(deleted=False,
-                                                          user=self.db_user1).count()
+        count_musics_user1 = Music.objects.filter(deleted=False,
+                                                  user=self.db_user1).count()
         count_deleted_musics_user2 = Music.objects.filter(deleted=True,
                                                           user=self.db_user2).count()
 
         self.assertEqual(9, response.data)
-        self.assertEqual(10, count_deleted_musics_user1)
+        self.assertEqual(10, count_musics_user1)
         self.assertEqual(10, count_deleted_musics_user2)
         self.assertEqual(status.HTTP_200_OK, response.status_code)
 
@@ -121,13 +117,13 @@ class RestoreDeletedMusicsTest(TestCase):
             **self.header_user2
         )
 
-        count_deleted_musics_user1 = Music.objects.filter(deleted=False,
-                                                          user=self.db_user1).count()
+        count_musics_user1 = Music.objects.filter(deleted=False,
+                                                  user=self.db_user1).count()
         count_deleted_musics_user2 = Music.objects.filter(deleted=True,
                                                           user=self.db_user2).count()
 
         self.assertEqual(0, response.data)
-        self.assertEqual(1, count_deleted_musics_user1)
+        self.assertEqual(1, count_musics_user1)
         self.assertEqual(10, count_deleted_musics_user2)
         self.assertEqual(status.HTTP_200_OK, response.status_code)
 
@@ -144,13 +140,14 @@ class RestoreDeletedMusicsTest(TestCase):
             **self.header_user1
         )
 
-        self.assertEqual(ID_IS_REQUIRED, response.data.get('message'))
+        self.assertEqual(messages.ID_IS_REQUIRED, response.data.get('message'))
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
 
     @parameterized.expand([
-        (INVALID_TOKEN_HEADER, INVALID_TOKEN),
-        (EMPTY_AUTHORIZATION_HEADER, HEADER_AUTHORIZATION_NOT_PRESENT),
-        (NO_TOKEN_HEADER, NO_TOKEN_PROVIDED),
+        (base_tdd.INVALID_TOKEN_HEADER, messages.INVALID_TOKEN),
+        (base_tdd.EMPTY_AUTHORIZATION_HEADER,
+         messages.HEADER_AUTHORIZATION_NOT_PRESENT),
+        (base_tdd.NO_TOKEN_HEADER, messages.NO_TOKEN_PROVIDED),
     ])
     def test_restore_deleted_musics_with_inappropriate_tokens(self, header, expected_message):
 
@@ -178,7 +175,7 @@ class RestoreDeletedMusicsTest(TestCase):
             content_type='application/json'
         )
 
-        expected_message = HEADER_AUTHORIZATION_NOT_PRESENT
+        expected_message = messages.HEADER_AUTHORIZATION_NOT_PRESENT
 
         self.assertEqual(expected_message, response.data.get('message'))
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
@@ -192,10 +189,10 @@ class RestoreDeletedMusicsTest(TestCase):
             reverse('restore_deleted_musics'),
             data=json.dumps(deleted_musics_serializer.data),
             content_type='application/json',
-            **get_no_bearer_header(self.header_user1)
+            **base_tdd.get_no_bearer_header(self.header_user1)
         )
 
-        expected_message = NO_BEARER_AUTHENTICATION_SCHEME
+        expected_message = messages.NO_BEARER_AUTHENTICATION_SCHEME
 
         self.assertEqual(expected_message, response.data.get('message'))
         self.assertEqual(status.HTTP_401_UNAUTHORIZED, response.status_code)

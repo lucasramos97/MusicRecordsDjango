@@ -3,11 +3,10 @@ from parameterized import parameterized
 from rest_framework import status
 from django.test import TestCase, Client
 from django.urls import reverse
+from app import messages
 from app.models import User
 from app.serializers import UserSerializer
 from app.tests.factories import create_user
-from app.messages import (EMAIL_IS_REQUIRED, PASSWORD_IS_REQUIRED,
-                          USERNAME_IS_REQUIRED, get_email_already_registered)
 
 client = Client()
 
@@ -16,7 +15,7 @@ class CreateUserTest(TestCase):
 
     def setUp(self):
 
-        self.all_atributes_user = {
+        self.all_attributes_user = {
             'username': 'user1',
             'email': 'user1@email.com',
             'password': '123',
@@ -26,7 +25,7 @@ class CreateUserTest(TestCase):
 
         response = client.post(
             reverse('create_user'),
-            data=json.dumps(self.all_atributes_user),
+            data=json.dumps(self.all_attributes_user),
             content_type='application/json'
         )
 
@@ -35,15 +34,15 @@ class CreateUserTest(TestCase):
         db_user = User.objects.get(id=response_serializer.get('id'))
         db_user_serializer = UserSerializer(db_user).data
 
-        valid_username = self.all_atributes_user.get('username') == db_user_serializer.get(
+        valid_username = self.all_attributes_user.get('username') == db_user_serializer.get(
             'username') == response_serializer.get('username')
 
-        valid_email = self.all_atributes_user.get('email') == db_user_serializer.get(
+        valid_email = self.all_attributes_user.get('email') == db_user_serializer.get(
             'email') == response_serializer.get('email')
 
         self.assertTrue(valid_username)
         self.assertTrue(valid_email)
-        self.assertNotEqual(self.all_atributes_user.get('password'),
+        self.assertNotEqual(self.all_attributes_user.get('password'),
                             db_user_serializer.get('password'))
 
         self.assertEqual(db_user_serializer.get('password'),
@@ -63,17 +62,17 @@ class CreateUserTest(TestCase):
         self.assertEqual(status.HTTP_201_CREATED, response.status_code)
 
     @parameterized.expand([
-        ('username', USERNAME_IS_REQUIRED),
-        ('email', EMAIL_IS_REQUIRED),
-        ('password', PASSWORD_IS_REQUIRED),
+        ('username', messages.USERNAME_IS_REQUIRED),
+        ('email', messages.EMAIL_IS_REQUIRED),
+        ('password', messages.PASSWORD_IS_REQUIRED),
     ])
     def test_create_user_without_required_fields(self, field, expected_message):
 
-        self.all_atributes_user[field] = ''
+        self.all_attributes_user[field] = ''
 
         response = client.post(
             reverse('create_user'),
-            data=json.dumps(self.all_atributes_user),
+            data=json.dumps(self.all_attributes_user),
             content_type='application/json'
         )
 
@@ -86,12 +85,12 @@ class CreateUserTest(TestCase):
 
         response = client.post(
             reverse('create_user'),
-            data=json.dumps(self.all_atributes_user),
+            data=json.dumps(self.all_attributes_user),
             content_type='application/json'
         )
 
-        expected_message = get_email_already_registered(
-            self.all_atributes_user.get('email'))
+        expected_message = messages.get_email_already_registered(
+            self.all_attributes_user.get('email'))
 
         self.assertEqual(expected_message, response.data.get('message'))
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)

@@ -2,15 +2,12 @@ from rest_framework import status
 from django.test import TestCase
 from django.urls import reverse
 from parameterized import parameterized
+from app import messages
 from app.models import Music
 from app.tests.factories import MusicFactory, create_user
-from .base_tdd import (EMPTY_AUTHORIZATION_HEADER, INVALID_TOKEN_HEADER,
-                       NO_TOKEN_HEADER, generate_header, get_no_bearer_header,
-                       get_client)
-from app.messages import (HEADER_AUTHORIZATION_NOT_PRESENT, INVALID_TOKEN,
-                          NO_BEARER_AUTHENTICATION_SCHEME, NO_TOKEN_PROVIDED)
+from . import base_tdd
 
-client = get_client()
+client = base_tdd.get_client()
 
 
 class EmptyListTest(TestCase):
@@ -19,7 +16,7 @@ class EmptyListTest(TestCase):
     def setUpTestData(cls):
 
         cls.db_user1 = create_user()
-        cls.header_user1 = generate_header(cls.db_user1)
+        cls.header_user1 = base_tdd.generate_header(cls.db_user1)
 
         cls.db_user2 = create_user('2')
 
@@ -46,9 +43,10 @@ class EmptyListTest(TestCase):
         self.assertEqual(status.HTTP_200_OK, response.status_code)
 
     @parameterized.expand([
-        (INVALID_TOKEN_HEADER, INVALID_TOKEN),
-        (EMPTY_AUTHORIZATION_HEADER, HEADER_AUTHORIZATION_NOT_PRESENT),
-        (NO_TOKEN_HEADER, NO_TOKEN_PROVIDED),
+        (base_tdd.INVALID_TOKEN_HEADER, messages.INVALID_TOKEN),
+        (base_tdd.EMPTY_AUTHORIZATION_HEADER,
+         messages.HEADER_AUTHORIZATION_NOT_PRESENT),
+        (base_tdd.NO_TOKEN_HEADER, messages.NO_TOKEN_PROVIDED),
     ])
     def test_empty_list_with_inappropriate_tokens(self, header, expected_message):
 
@@ -66,7 +64,7 @@ class EmptyListTest(TestCase):
             reverse('empty_list')
         )
 
-        expected_message = HEADER_AUTHORIZATION_NOT_PRESENT
+        expected_message = messages.HEADER_AUTHORIZATION_NOT_PRESENT
 
         self.assertEqual(expected_message, response.data.get('message'))
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
@@ -75,10 +73,10 @@ class EmptyListTest(TestCase):
 
         response = client.delete(
             reverse('empty_list'),
-            **get_no_bearer_header(self.header_user1)
+            **base_tdd.get_no_bearer_header(self.header_user1)
         )
 
-        expected_message = NO_BEARER_AUTHENTICATION_SCHEME
+        expected_message = messages.NO_BEARER_AUTHENTICATION_SCHEME
 
         self.assertEqual(expected_message, response.data.get('message'))
         self.assertEqual(status.HTTP_401_UNAUTHORIZED, response.status_code)

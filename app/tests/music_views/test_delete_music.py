@@ -2,17 +2,13 @@ from rest_framework import status
 from django.test import TestCase
 from django.urls import reverse
 from parameterized import parameterized
+from app import messages
 from app.models import Music
 from app.serializers import MusicSerializer
 from app.tests.factories import MusicFactory, create_user
-from .base_tdd import (EMPTY_AUTHORIZATION_HEADER, INVALID_TOKEN_HEADER,
-                       NO_TOKEN_HEADER, generate_header, get_no_bearer_header,
-                       get_client)
-from app.messages import (HEADER_AUTHORIZATION_NOT_PRESENT, INVALID_TOKEN,
-                          MUSIC_NOT_FOUND, NO_BEARER_AUTHENTICATION_SCHEME,
-                          NO_TOKEN_PROVIDED)
+from . import base_tdd
 
-client = get_client()
+client = base_tdd.get_client()
 
 
 class DeleteMusicTest(TestCase):
@@ -21,8 +17,8 @@ class DeleteMusicTest(TestCase):
     def setUpTestData(cls):
 
         cls.db_user1 = create_user()
-        cls.header_user1 = generate_header(cls.db_user1)
-        cls.header_user2 = generate_header(create_user('2'))
+        cls.header_user1 = base_tdd.generate_header(cls.db_user1)
+        cls.header_user2 = base_tdd.generate_header(create_user('2'))
 
     def setUp(self):
 
@@ -80,7 +76,9 @@ class DeleteMusicTest(TestCase):
             **self.header_user1
         )
 
-        self.assertEqual(MUSIC_NOT_FOUND, response.data.get('message'))
+        expected_message = messages.MUSIC_NOT_FOUND
+
+        self.assertEqual(expected_message, response.data.get('message'))
         self.assertEqual(status.HTTP_404_NOT_FOUND, response.status_code)
 
     def test_delete_deleted_music(self):
@@ -95,7 +93,9 @@ class DeleteMusicTest(TestCase):
             **self.header_user1
         )
 
-        self.assertEqual(MUSIC_NOT_FOUND, response.data.get('message'))
+        expected_message = messages.MUSIC_NOT_FOUND
+
+        self.assertEqual(expected_message, response.data.get('message'))
         self.assertEqual(status.HTTP_404_NOT_FOUND, response.status_code)
 
     def test_delete_nonexistent_music_by_user(self):
@@ -110,13 +110,16 @@ class DeleteMusicTest(TestCase):
             **self.header_user2
         )
 
-        self.assertEqual(MUSIC_NOT_FOUND, response.data.get('message'))
+        expected_message = messages.MUSIC_NOT_FOUND
+
+        self.assertEqual(expected_message, response.data.get('message'))
         self.assertEqual(status.HTTP_404_NOT_FOUND, response.status_code)
 
     @parameterized.expand([
-        (INVALID_TOKEN_HEADER, INVALID_TOKEN),
-        (EMPTY_AUTHORIZATION_HEADER, HEADER_AUTHORIZATION_NOT_PRESENT),
-        (NO_TOKEN_HEADER, NO_TOKEN_PROVIDED),
+        (base_tdd.INVALID_TOKEN_HEADER, messages.INVALID_TOKEN),
+        (base_tdd.EMPTY_AUTHORIZATION_HEADER,
+         messages.HEADER_AUTHORIZATION_NOT_PRESENT),
+        (base_tdd.NO_TOKEN_HEADER, messages.NO_TOKEN_PROVIDED),
     ])
     def test_delete_music_with_inappropriate_tokens(self, header, expected_message):
 
@@ -144,7 +147,7 @@ class DeleteMusicTest(TestCase):
             )
         )
 
-        expected_message = HEADER_AUTHORIZATION_NOT_PRESENT
+        expected_message = messages.HEADER_AUTHORIZATION_NOT_PRESENT
 
         self.assertEqual(expected_message, response.data.get('message'))
         self.assertEqual(status.HTTP_401_UNAUTHORIZED, response.status_code)
@@ -158,10 +161,10 @@ class DeleteMusicTest(TestCase):
                     'id': self.music.id
                 }
             ),
-            **get_no_bearer_header(self.header_user1)
+            **base_tdd.get_no_bearer_header(self.header_user1)
         )
 
-        expected_message = NO_BEARER_AUTHENTICATION_SCHEME
+        expected_message = messages.NO_BEARER_AUTHENTICATION_SCHEME
 
         self.assertEqual(expected_message, response.data.get('message'))
         self.assertEqual(status.HTTP_401_UNAUTHORIZED, response.status_code)

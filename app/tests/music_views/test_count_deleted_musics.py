@@ -2,14 +2,11 @@ from rest_framework import status
 from django.test import TestCase
 from django.urls import reverse
 from parameterized import parameterized
+from app import messages
 from app.tests.factories import MusicFactory, create_user
-from .base_tdd import (EMPTY_AUTHORIZATION_HEADER, INVALID_TOKEN_HEADER,
-                       NO_TOKEN_HEADER, generate_header, get_no_bearer_header,
-                       get_client)
-from app.messages import (HEADER_AUTHORIZATION_NOT_PRESENT, INVALID_TOKEN,
-                          NO_BEARER_AUTHENTICATION_SCHEME, NO_TOKEN_PROVIDED,)
+from . import base_tdd
 
-client = get_client()
+client = base_tdd.get_client()
 
 
 class CountDeletedMusicsTest(TestCase):
@@ -18,7 +15,7 @@ class CountDeletedMusicsTest(TestCase):
     def setUpTestData(cls):
 
         cls.db_user1 = create_user()
-        cls.header_user1 = generate_header(cls.db_user1)
+        cls.header_user1 = base_tdd.generate_header(cls.db_user1)
 
         MusicFactory.create_batch(10, deleted=True, user=cls.db_user1)
         MusicFactory.create(user=cls.db_user1)
@@ -35,9 +32,10 @@ class CountDeletedMusicsTest(TestCase):
         self.assertEqual(status.HTTP_200_OK, response.status_code)
 
     @parameterized.expand([
-        (INVALID_TOKEN_HEADER, INVALID_TOKEN),
-        (EMPTY_AUTHORIZATION_HEADER, HEADER_AUTHORIZATION_NOT_PRESENT),
-        (NO_TOKEN_HEADER, NO_TOKEN_PROVIDED),
+        (base_tdd.INVALID_TOKEN_HEADER, messages.INVALID_TOKEN),
+        (base_tdd.EMPTY_AUTHORIZATION_HEADER,
+         messages.HEADER_AUTHORIZATION_NOT_PRESENT),
+        (base_tdd.NO_TOKEN_HEADER, messages.NO_TOKEN_PROVIDED),
     ])
     def test_count_deleted_music_with_inappropriate_tokens(self, header, expected_message):
 
@@ -55,7 +53,7 @@ class CountDeletedMusicsTest(TestCase):
             reverse('count_deleted_musics')
         )
 
-        expected_message = HEADER_AUTHORIZATION_NOT_PRESENT
+        expected_message = messages.HEADER_AUTHORIZATION_NOT_PRESENT
 
         self.assertEqual(expected_message, response.data.get('message'))
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
@@ -64,10 +62,10 @@ class CountDeletedMusicsTest(TestCase):
 
         response = client.get(
             reverse('count_deleted_musics'),
-            **get_no_bearer_header(self.header_user1)
+            **base_tdd.get_no_bearer_header(self.header_user1)
         )
 
-        expected_message = NO_BEARER_AUTHENTICATION_SCHEME
+        expected_message = messages.NO_BEARER_AUTHENTICATION_SCHEME
 
         self.assertEqual(expected_message, response.data.get('message'))
         self.assertEqual(status.HTTP_401_UNAUTHORIZED, response.status_code)
