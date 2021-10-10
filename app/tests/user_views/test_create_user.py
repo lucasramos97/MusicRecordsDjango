@@ -79,6 +79,19 @@ class CreateUserTest(TestCase):
         self.assertEqual(expected_message, response.data.get('message'))
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
 
+    def test_create_user_with_invalid_email(self):
+
+        self.all_attributes_user['email'] = 'test'
+
+        response = client.post(
+            reverse('create_user'),
+            data=json.dumps(self.all_attributes_user),
+            content_type='application/json'
+        )
+
+        self.assertEqual(messages.EMAIL_INVALID, response.data.get('message'))
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
+
     def test_create_user_with_existent_email(self):
 
         create_user()
