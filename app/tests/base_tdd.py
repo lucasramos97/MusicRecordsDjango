@@ -1,6 +1,7 @@
 import datetime
 import json
 import jwt
+import re
 from django.conf import settings
 from django.test import Client
 from django.urls import reverse
@@ -62,3 +63,15 @@ def get_expired_token_header(user_id):
     return {
         'HTTP_AUTHORIZATION': 'Bearer {}'.format(expired_token)
     }
+
+
+def match_date(date):
+    return re.match('\d{4}-\d{2}-\d{2}', date)
+
+
+def match_time(time):
+    return re.match('\d{2}:\d{2}:\d{2}', time)
+
+
+def match_date_time(date_time):
+    return re.match('\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}.\d{3}', date_time)

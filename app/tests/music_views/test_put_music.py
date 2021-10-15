@@ -7,8 +7,8 @@ from parameterized import parameterized
 from app import messages
 from app.models import Music
 from app.serializers import MusicSerializer
+from app.tests import base_tdd
 from app.tests.factories import MusicFactory, create_user
-from . import base_tdd
 
 client = base_tdd.get_client()
 
@@ -98,9 +98,15 @@ class PutMusicTest(TestCase):
         self.assertNotEqual(music_serializer.get('artist'),
                             response_serializer.get('artist'))
 
+        self.assertIsNotNone(base_tdd.match_date(
+            response_serializer.get('release_date')))
+
         self.assertTrue(valid_release_date)
         self.assertNotEqual(music_serializer.get('release_date'),
                             response_serializer.get('release_date'))
+
+        self.assertIsNotNone(base_tdd.match_time(
+            response_serializer.get('duration')))
 
         self.assertTrue(valid_duration)
         self.assertNotEqual(music_serializer.get('duration'),
@@ -116,8 +122,12 @@ class PutMusicTest(TestCase):
 
         self.assertIsNone(response_serializer.get('deleted'))
         self.assertIsNone(response_serializer.get('user'))
-        self.assertIsNotNone(response_serializer.get('created_at'))
-        self.assertIsNotNone(response_serializer.get('updated_at'))
+        self.assertIsNotNone(base_tdd.match_date_time(
+            response_serializer.get('created_at')))
+
+        self.assertIsNotNone(base_tdd.match_date_time(
+            response_serializer.get('updated_at')))
+
         self.assertTrue(valid_created_at)
         self.assertEqual(db_music_serializer.get('updated_at'),
                          response_serializer.get('updated_at'))
@@ -181,9 +191,15 @@ class PutMusicTest(TestCase):
         self.assertNotEqual(music_serializer.get('artist'),
                             response_serializer.get('artist'))
 
+        self.assertIsNotNone(base_tdd.match_date(
+            response_serializer.get('release_date')))
+
         self.assertTrue(valid_release_date)
         self.assertNotEqual(music_serializer.get('release_date'),
                             response_serializer.get('release_date'))
+
+        self.assertIsNotNone(base_tdd.match_time(
+            response_serializer.get('duration')))
 
         self.assertTrue(valid_duration)
         self.assertNotEqual(music_serializer.get('duration'),
@@ -193,8 +209,12 @@ class PutMusicTest(TestCase):
         self.assertTrue(valid_feat)
         self.assertIsNone(response_serializer.get('deleted'))
         self.assertIsNone(response_serializer.get('user'))
-        self.assertIsNotNone(response_serializer.get('created_at'))
-        self.assertIsNotNone(response_serializer.get('updated_at'))
+        self.assertIsNotNone(base_tdd.match_date_time(
+            response_serializer.get('created_at')))
+
+        self.assertIsNotNone(base_tdd.match_date_time(
+            response_serializer.get('updated_at')))
+
         self.assertTrue(valid_created_at)
         self.assertEqual(db_music_serializer.get('updated_at'),
                          response_serializer.get('updated_at'))

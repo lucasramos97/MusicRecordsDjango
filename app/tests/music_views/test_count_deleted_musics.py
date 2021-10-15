@@ -3,8 +3,8 @@ from django.test import TestCase
 from django.urls import reverse
 from parameterized import parameterized
 from app import messages
+from app.tests import base_tdd
 from app.tests.factories import MusicFactory, create_user
-from . import base_tdd
 
 client = base_tdd.get_client()
 

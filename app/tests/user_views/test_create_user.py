@@ -6,6 +6,7 @@ from django.urls import reverse
 from app import messages
 from app.models import User
 from app.serializers import UserSerializer
+from app.tests import base_tdd
 from app.tests.factories import create_user
 
 client = Client()
@@ -48,8 +49,12 @@ class CreateUserTest(TestCase):
         self.assertEqual(db_user_serializer.get('password'),
                          response_serializer.get('password'))
 
-        self.assertIsNotNone(response_serializer.get('created_at'))
-        self.assertIsNotNone(response_serializer.get('updated_at'))
+        self.assertIsNotNone(base_tdd.match_date_time(
+            response_serializer.get('created_at')))
+
+        self.assertIsNotNone(base_tdd.match_date_time(
+            response_serializer.get('updated_at')))
+
         self.assertEqual(db_user_serializer.get('created_at'),
                          response_serializer.get('created_at'))
 
