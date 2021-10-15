@@ -24,6 +24,14 @@ INVALID_TOKEN = 'Invalid token!'
 TOKEN_EXPIRED = 'Log in again, your token has expired!'
 
 
+def get_invalid_date(date):
+    return "'{}' is not a valid date!".format(date)
+
+
+def get_invalid_time(time):
+    return "'{}' is not a valid time!".format(time)
+
+
 def get_email_already_registered(email):
     return 'The {} e-mail has already been registered!'.format(email)
 

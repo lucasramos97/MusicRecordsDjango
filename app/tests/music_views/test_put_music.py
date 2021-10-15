@@ -353,6 +353,50 @@ class PutMusicTest(TestCase):
         self.assertEqual(expected_message, response.data.get('message'))
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
 
+    def test_put_music_with_invalid_release_date(self):
+
+        self.minimal_attributes_music['release_date'] = '2021-01-32'
+
+        response = client.put(
+            reverse(
+                'get_update_delete_music',
+                kwargs={
+                    'id': self.music.id
+                }
+            ),
+            data=json.dumps(self.minimal_attributes_music),
+            content_type='application/json',
+            **self.header_user1
+        )
+
+        expected_message = messages.get_invalid_date(
+            self.minimal_attributes_music['release_date'])
+
+        self.assertEqual(expected_message, response.data.get('message'))
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
+
+    def test_put_music_with_invalid_duration(self):
+
+        self.minimal_attributes_music['duration'] = '23:60:59'
+
+        response = client.put(
+            reverse(
+                'get_update_delete_music',
+                kwargs={
+                    'id': self.music.id
+                }
+            ),
+            data=json.dumps(self.minimal_attributes_music),
+            content_type='application/json',
+            **self.header_user1
+        )
+
+        expected_message = messages.get_invalid_time(
+            self.minimal_attributes_music['duration'])
+
+        self.assertEqual(expected_message, response.data.get('message'))
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
+
     @parameterized.expand([
         (base_tdd.INVALID_TOKEN_HEADER, messages.INVALID_TOKEN),
         (base_tdd.EMPTY_AUTHORIZATION_HEADER,

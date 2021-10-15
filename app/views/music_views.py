@@ -1,3 +1,4 @@
+import re
 from datetime import datetime
 from django.core.paginator import Paginator
 from django.core.exceptions import FieldError
@@ -131,20 +132,26 @@ def __valid_music(request):
     if not duration:
         raise FieldError(messages.DURATION_IS_REQUIRED)
 
+    if not re.match('\d{4}-\d{2}-\d{2}', release_date):
+        raise FieldError(messages.WRONG_RELEASE_DATE_FORMAT)
+
     try:
 
         release_date_obj = datetime.strptime(release_date, '%Y-%m-%d')
     except ValueError:
-        raise FieldError(messages.WRONG_RELEASE_DATE_FORMAT)
+        raise FieldError(messages.get_invalid_date(release_date))
 
     if release_date_obj > datetime.today():
         raise FieldError(messages.RELEASE_DATE_CANNOT_BE_FUTURE)
+
+    if not re.match('\d{2}:\d{2}:\d{2}', duration):
+        raise FieldError(messages.WRONG_DURATION_FORMAT)
 
     try:
 
         datetime.strptime(duration, '%H:%M:%S')
     except ValueError:
-        raise FieldError(messages.WRONG_DURATION_FORMAT)
+        raise FieldError(messages.get_invalid_time(duration))
 
     return (title, artist, release_date, duration)
 
