@@ -21,6 +21,7 @@ HEADER_AUTHORIZATION_NOT_PRESENT = 'Header Authorization not present!'
 NO_BEARER_AUTHENTICATION_SCHEME = 'No Bearer HTTP authentication scheme!'
 NO_TOKEN_PROVIDED = 'No token provided!'
 INVALID_TOKEN = 'Invalid token!'
+TOKEN_EXPIRED = 'Log in again, your token has expired!'
 
 
 def get_email_already_registered(email):

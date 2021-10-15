@@ -36,8 +36,8 @@ class BearerAuthentication(authentication.BaseAuthentication):
                 token, settings.SECRET_KEY, algorithms='HS256')
         except jwt.exceptions.DecodeError:
             raise exceptions.AuthenticationFailed(messages.INVALID_TOKEN)
-        except jwt.ExpiredSignatureError as e:
-            raise exceptions.AuthenticationFailed(str(e))
+        except jwt.ExpiredSignatureError:
+            raise exceptions.AuthenticationFailed(messages.TOKEN_EXPIRED)
 
         return self.authenticate_credentials(payload.get('user_id'))
 

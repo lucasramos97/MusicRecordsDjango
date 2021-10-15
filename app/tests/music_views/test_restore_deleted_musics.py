@@ -196,3 +196,20 @@ class RestoreDeletedMusicsTest(TestCase):
 
         self.assertEqual(expected_message, response.data.get('message'))
         self.assertEqual(status.HTTP_401_UNAUTHORIZED, response.status_code)
+
+    def test_restore_deleted_musics_with_expired_token(self):
+
+        deleted_musics_serializer = MusicSerializer(self.deleted_musics,
+                                                    many=True)
+
+        response = client.post(
+            reverse('restore_deleted_musics'),
+            data=json.dumps(deleted_musics_serializer.data),
+            content_type='application/json',
+            **base_tdd.get_expired_token_header(self.db_user1.id)
+        )
+
+        expected_message = messages.TOKEN_EXPIRED
+
+        self.assertEqual(expected_message, response.data.get('message'))
+        self.assertEqual(status.HTTP_401_UNAUTHORIZED, response.status_code)

@@ -412,3 +412,22 @@ class PutMusicTest(TestCase):
 
         self.assertEqual(expected_message, response.data.get('message'))
         self.assertEqual(status.HTTP_401_UNAUTHORIZED, response.status_code)
+
+    def test_put_music_with_expired_token(self):
+
+        response = client.put(
+            reverse(
+                'get_update_delete_music',
+                kwargs={
+                    'id': self.music.id
+                }
+            ),
+            data=json.dumps(self.minimal_attributes_music),
+            content_type='application/json',
+            **base_tdd.get_expired_token_header(self.db_user1.id)
+        )
+
+        expected_message = messages.TOKEN_EXPIRED
+
+        self.assertEqual(expected_message, response.data.get('message'))
+        self.assertEqual(status.HTTP_401_UNAUTHORIZED, response.status_code)

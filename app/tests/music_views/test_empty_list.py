@@ -80,3 +80,15 @@ class EmptyListTest(TestCase):
 
         self.assertEqual(expected_message, response.data.get('message'))
         self.assertEqual(status.HTTP_401_UNAUTHORIZED, response.status_code)
+
+    def test_empty_list_with_expired_token(self):
+
+        response = client.delete(
+            reverse('empty_list'),
+            **base_tdd.get_expired_token_header(self.db_user1.id)
+        )
+
+        expected_message = messages.TOKEN_EXPIRED
+
+        self.assertEqual(expected_message, response.data.get('message'))
+        self.assertEqual(status.HTTP_401_UNAUTHORIZED, response.status_code)
