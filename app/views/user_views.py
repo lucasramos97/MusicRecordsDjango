@@ -94,4 +94,7 @@ def __valid_user(request):
 
 
 def __token_expiration_time():
-    return datetime.datetime.today() + datetime.timedelta(days=1)
+
+    same_time_tomorrow = datetime.datetime.today() + datetime.timedelta(days=1)
+
+    return int(same_time_tomorrow.timestamp())

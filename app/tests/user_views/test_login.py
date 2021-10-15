@@ -1,5 +1,8 @@
+import datetime
 import json
+import jwt
 from rest_framework import status
+from django.conf import settings
 from django.test import TestCase, Client
 from django.urls import reverse
 from parameterized import parameterized
@@ -40,6 +43,22 @@ class LoginTest(TestCase):
 
         self.assertIsNone(response.data.get('password'))
         self.assertEqual(status.HTTP_200_OK, response.status_code)
+
+    def test_token_lasts_24_hours(self):
+
+        response = client.post(
+            reverse('login'),
+            data=json.dumps(self.all_attributes_login),
+            content_type='application/json'
+        )
+
+        payload = jwt.decode(response.data.get('token'),
+                             settings.SECRET_KEY, algorithms='HS256')
+
+        same_time_tomorrow = datetime.datetime.today() + datetime.timedelta(days=1)
+        timestamp = int(same_time_tomorrow.timestamp())
+
+        self.assertEqual(timestamp, payload.get('exp'))
 
     @parameterized.expand([
         ('email', messages.EMAIL_IS_REQUIRED),
