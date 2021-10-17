@@ -35,9 +35,25 @@ class GetMusicByIdTest(TestCase):
             **self.header_user1
         )
 
+        response_serializer = response.data
+
         serializer = MusicSerializer(self.music)
 
         self.assertEqual(serializer.data, response.data)
+        self.assertIsNotNone(base_tdd.match_date(
+            response_serializer.get('release_date')))
+
+        self.assertIsNotNone(base_tdd.match_time(
+            response_serializer.get('duration')))
+
+        self.assertIsNone(response_serializer.get('deleted'))
+        self.assertIsNone(response_serializer.get('user'))
+        self.assertIsNotNone(base_tdd.match_date_time(
+            response_serializer.get('created_at')))
+
+        self.assertIsNotNone(base_tdd.match_date_time(
+            response_serializer.get('updated_at')))
+
         self.assertEqual(status.HTTP_200_OK, response.status_code)
 
     def test_get_nonexistent_music_by_id(self):

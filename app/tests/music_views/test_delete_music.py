@@ -49,11 +49,21 @@ class DeleteMusicTest(TestCase):
             'created_at') == response_serializer.get('created_at')
 
         self.assertEqual(db_music_serializer, response_serializer)
+        self.assertIsNotNone(base_tdd.match_date(
+            response_serializer.get('release_date')))
+
+        self.assertIsNotNone(base_tdd.match_time(
+            response_serializer.get('duration')))
+
         self.assertIsNone(response_serializer.get('deleted'))
         self.assertIsNone(response_serializer.get('user'))
         self.assertTrue(db_music.deleted)
-        self.assertIsNotNone(response_serializer.get('created_at'))
-        self.assertIsNotNone(response_serializer.get('updated_at'))
+        self.assertIsNotNone(base_tdd.match_date_time(
+            response_serializer.get('created_at')))
+
+        self.assertIsNotNone(base_tdd.match_date_time(
+            response_serializer.get('updated_at')))
+
         self.assertTrue(valid_created_at)
 
         self.assertEqual(db_music_serializer.get('updated_at'),
