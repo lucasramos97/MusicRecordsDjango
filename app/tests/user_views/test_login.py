@@ -33,8 +33,7 @@ class LoginTest(TestCase):
 
         response_serializer = response.data
 
-        self.assertIsNotNone(response_serializer.get('token'))
-        self.assertNotEqual('', response_serializer.get('token'))
+        self.assertFalse(not response_serializer.get('token'))
         self.assertEqual(self.db_user1.username,
                          response_serializer.get('username'))
 
