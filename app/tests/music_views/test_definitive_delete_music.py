@@ -45,6 +45,7 @@ class DefinitiveDeleteMusicTest(TestCase):
             music_not_exists = True
 
         self.assertTrue(music_not_exists)
+        self.assertIsNone(response.data)
         self.assertEqual(status.HTTP_200_OK, response.status_code)
 
     def test_definitive_delete_nonexistent_music_by_id(self):
