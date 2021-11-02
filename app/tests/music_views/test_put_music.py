@@ -120,6 +120,7 @@ class PutMusicTest(TestCase):
         self.assertNotEqual(music_serializer.get('feat'),
                             response_serializer.get('feat'))
 
+        self.assertFalse(db_music.deleted)
         self.assertIsNone(response_serializer.get('deleted'))
         self.assertIsNone(response_serializer.get('user'))
         self.assertIsNotNone(base_tdd.match_date_time(
@@ -207,6 +208,7 @@ class PutMusicTest(TestCase):
 
         self.assertTrue(valid_number_views)
         self.assertTrue(valid_feat)
+        self.assertFalse(db_music.deleted)
         self.assertIsNone(response_serializer.get('deleted'))
         self.assertIsNone(response_serializer.get('user'))
         self.assertIsNotNone(base_tdd.match_date_time(
