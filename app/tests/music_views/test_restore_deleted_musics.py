@@ -90,18 +90,12 @@ class RestoreDeletedMusicsTest(TestCase):
         )
 
         db_musics_user1 = Music.objects.filter(user=self.db_user1)
-        contain_not_deleted = False
-        for music in db_musics_user1:
-            if not music.deleted:
-                contain_not_deleted = True
-                break
-
         count_deleted_musics_user2 = Music.objects.filter(deleted=True,
                                                           user=self.db_user2).count()
 
         self.assertEqual(0, response.data)
         self.assertEqual(11, len(db_musics_user1))
-        self.assertTrue(contain_not_deleted)
+        self.assertTrue(any(not music.deleted for music in db_musics_user1))
         self.assertEqual(10, count_deleted_musics_user2)
         self.assertEqual(status.HTTP_200_OK, response.status_code)
 
