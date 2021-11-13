@@ -10,7 +10,7 @@ class BearerAuthentication(authentication.BaseAuthentication):
 
     def authenticate(self, request):
 
-        if self.__not_authenticate(request):
+        if self._not_authenticate(request):
             return None
 
         auth = authentication.get_authorization_header(request).split()
@@ -51,5 +51,5 @@ class BearerAuthentication(authentication.BaseAuthentication):
 
         return (user, None)
 
-    def __not_authenticate(self, request):
+    def _not_authenticate(self, request):
         return request.method == 'POST' and (request.path == '/login' or request.path == '/users')

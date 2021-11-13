@@ -7,12 +7,12 @@ class BaseSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
 
         ret = super().to_representation(instance)
-        ret['created_at'] = self.__format_datetime(ret.get('created_at'))
-        ret['updated_at'] = self.__format_datetime(ret.get('updated_at'))
+        ret['created_at'] = self._format_datetime(ret.get('created_at'))
+        ret['updated_at'] = self._format_datetime(ret.get('updated_at'))
 
         return ret
 
-    def __format_datetime(self, datetime_str):
+    def _format_datetime(self, datetime_str):
 
         if not datetime_str:
             return ''

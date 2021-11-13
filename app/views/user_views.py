@@ -18,7 +18,12 @@ def create_user(request):
 
     try:
 
-        (username, email, password) = __valid_user(request)
+        (username, email, password) = _valid_user(request)
+
+        if User.objects.filter(email=email).exists():
+            message = messages.get_email_already_registered(email)
+            return Response({'message': message}, status=status.HTTP_400_BAD_REQUEST)
+
         user = User.objects.create_user(
             username=username,
             email=email,
@@ -29,13 +34,6 @@ def create_user(request):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     except FieldError as e:
         return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-    except IntegrityError as e:
-        message = str(e)
-        if message.split('app_user.')[1] == 'email':
-            message = messages.get_email_already_registered(
-                request.data.get('email'))
-
-        return Response({'message': message}, status=status.HTTP_400_BAD_REQUEST)
     except ValidationError:
         return Response({'message': messages.EMAIL_INVALID}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -45,14 +43,13 @@ def login(request):
 
     try:
 
-        (email, password) = __valid_login(request)
-        validate_email(email)
+        (email, password) = _valid_login(request)
         user = User.objects.get(email=email)
         if not user.check_password(password):
             message = messages.get_password_does_not_match_with_email(email)
             return Response({'message': message}, status=status.HTTP_401_UNAUTHORIZED)
 
-        token = jwt.encode({'user_id': user.id, 'exp': __token_expiration_time()},
+        token = jwt.encode({'user_id': user.id, 'exp': _token_expiration_time()},
                            settings.SECRET_KEY, algorithm='HS256')
 
         return Response({
@@ -68,7 +65,7 @@ def login(request):
         return Response({'message': messages.EMAIL_INVALID}, status=status.HTTP_400_BAD_REQUEST)
 
 
-def __valid_login(request):
+def _valid_login(request):
 
     email = request.data.get('email')
     if not email:
@@ -83,17 +80,17 @@ def __valid_login(request):
     return (email, password)
 
 
-def __valid_user(request):
+def _valid_user(request):
 
     username = request.data.get('username')
     if not username:
         raise FieldError(messages.USERNAME_IS_REQUIRED)
 
-    (email, password) = __valid_login(request)
+    (email, password) = _valid_login(request)
     return (username, email, password)
 
 
-def __token_expiration_time():
+def _token_expiration_time():
 
     same_time_tomorrow = datetime.datetime.today() + datetime.timedelta(days=1)
 
